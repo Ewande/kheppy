@@ -4,11 +4,9 @@ KhepPy stands for **Khep**era **Py**thon and it is a Python interface with learn
 
 The idea behind KhepPy is to provide algorithms able to generate high-quality steering programs for Khepera robots.
 
-## Getting Started
+## Getting started
 
-The procedure to run KhepPt is fast and very easy.  
-
-
+The procedure to run KhepPy is fast and very easy.  
 
 ### Prerequisites
 
@@ -37,7 +35,7 @@ Or use precompiled binaries:
    export KHEPERA_LIB="/your/path/to/the/engine"
    ```
 
-## Test installation
+### Test installation
 
 For basic verification run:
 ```

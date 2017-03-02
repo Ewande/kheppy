@@ -1,6 +1,7 @@
 import warnings
 from ctypes import cdll, c_int, POINTER, c_float, create_string_buffer, c_double
-from core.constants import KHEPERA_LIB
+
+from kheppy.core.constants import KHEPERA_LIB
 
 
 class Simulation:

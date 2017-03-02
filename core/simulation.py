@@ -156,4 +156,3 @@ class SimulationList:
         for sims in self.list:
             for sim in sims:
                 sim.__exit__(exc_type, exc_val, exc_tb)
-

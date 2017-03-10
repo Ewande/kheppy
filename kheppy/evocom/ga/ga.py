@@ -1,5 +1,6 @@
 from timeit import default_timer as timer
 import numpy as np
+import os
 
 from kheppy.core import SimList
 from kheppy.evocom.ga.population import Population
@@ -98,6 +99,8 @@ class GeneticAlgorithm:
                 i += 1
 
             if output_dir is not None:
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
                 self.params['model'].save('{}ga_final_{}.nn'.format(output_dir, timestamp()), best.weights, best.biases)
             print('Evolution finished after {} iterations.'.format(i))
             self.best = best

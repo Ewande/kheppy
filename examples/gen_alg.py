@@ -12,5 +12,5 @@ def avoid_collision(sensors, left_motor, right_motor):
 
 if __name__ == '__main__':
     model = NeuralNet(8).add_layer(30, 'relu').add_layer(2, 'tanh')
-    ga = GeneticAlgorithm().eval_params(model, avoid_collision).sim_params('worlds/circles.wd', 1, 5)
-    ga.run('/Users/augoff/Downloads/ttt/', verbose=True)
+    ga = GeneticAlgorithm().eval_params(model, avoid_collision).sim_params('worlds/circles.wd', 1, 5).evo_params(epochs=5)
+    ga.run('/home/user/kheppy_results/', verbose=True)

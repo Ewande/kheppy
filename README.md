@@ -1,6 +1,6 @@
 # KhepPy
 
-KhepPy stands for **Khep**era **Py**thon and it is a Python interface with learning methods for Khepera simulation engine. More information about the engine itself can be found [here](https://github.com/Ewande/khepera).
+KhepPy stands for **Khep**era **Py**thon and is Python API with evolutionary computation and reinforcement learning algorithms for Khepera simulation engine. More information about the engine itself can be found [here](https://github.com/Ewande/khepera).
 
 The idea behind KhepPy is to provide algorithms able to generate high-quality steering programs for Khepera robots.
 
@@ -33,7 +33,8 @@ Or use precompiled binaries:
 3. Configure KHEPERA_LIB environment variable to point to Khepera simulation engine binaries.  
    ```
    export KHEPERA_LIB="/your/path/to/the/engine"
-   ```
+   ```  
+   If you use PyCharm, go to *Run > Edit Configurations...* and add KHEPERA_LIB variable to *Environment variables* list.
 
 ### Test installation
 
@@ -44,8 +45,9 @@ python -c 'from kheppy.core import Simulation'
 No output means kheppy.core should be ready to use.
 
 ## Examples
-Now you can run some examples to familiarize yourself with Kheppy.
-WORK IN PROGRESS.
+Now you can run some examples to familiarize yourself with KhepPy:
+* [genetic algorithm](https://github.com/Ewande/kheppy/blob/master/examples/gen_alg.py)
+* WORK IN PROGRESS...
 
 ## License
 

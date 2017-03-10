@@ -1,1 +1,1 @@
-from .simulation import Simulation, SimulationList
+from .simulation import Simulation, SimList

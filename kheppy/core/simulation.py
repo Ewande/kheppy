@@ -104,7 +104,7 @@ class Simulation:
             Simulation._dll.removeSimulation(self.initial_state)
 
 
-class SimulationList:
+class SimList:
     """
     Creates 'num_sim' * 'num_per_ctrl' independent Simulation objects.
 

@@ -1,5 +1,6 @@
 import warnings
 from ctypes import cdll, c_int, POINTER, c_float, create_string_buffer, c_double
+import numpy as np
 
 from kheppy.core.constants import KHEPERA_LIB
 
@@ -26,8 +27,9 @@ class Simulation:
     _dll.getSensorState.restype = c_float
     _dll.getSensorCount.restype = c_int
     _dll.cloneSimulation.restype = POINTER(c_int)
-    _dll.getXCoord.restype = c_int
-    _dll.getYCoord.restype = c_int
+    _dll.getRobotXCoord.restype = c_float
+    _dll.getRobotYCoord.restype = c_float
+    _dll.setSeed.restype = c_float
 
     def __init__(self, wd_path=None):
         if wd_path is not None:
@@ -83,25 +85,28 @@ class Simulation:
         if self.robot is None:
             Simulation._print_warning()
             return None
-        return Simulation._dll.getXCoord(self.robot), Simulation._dll.getYCoord(self.robot)
+        return Simulation._dll.getRobotXCoord(self.robot), Simulation._dll.getRobotYCoord(self.robot)
 
-    def set_seed(self, seed):
-        # TODO: no such function in DLL interface
-        warnings.warn('Setting seed will be available in the future.')
+    @staticmethod
+    def set_seed(seed):
+        Simulation._dll.setSeed(c_int(seed))
 
     def move_robot_random(self):
         if self.robot is None:
             Simulation._print_warning()
-        Simulation._dll.moveRandom(self.sim, self.robot)
+        Simulation._dll.teleportRobotRandom(self.sim, self.robot)
+
+    def close(self):
+        if self.sim is not None:
+            Simulation._dll.removeSimulation(self.sim)
+        if self.initial_state is not None and not self.is_copy:
+            Simulation._dll.removeSimulation(self.initial_state)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.sim is not None:
-            Simulation._dll.removeSimulation(self.sim)
-        if self.initial_state is not None and not self.is_copy:
-            Simulation._dll.removeSimulation(self.initial_state)
+        self.close()
 
 
 class SimList:
@@ -116,29 +121,43 @@ class SimList:
     """
 
     def __init__(self, path, num_sim, num_per_ctrl, robot_id):
-        self.list = []
+        self.list = [list() for _ in range(num_sim)]
         self.num_per_ctrl = num_per_ctrl
         self.init_sim = Simulation(path)
         self.init_sim.set_controlled_robot(robot_id)
-        for _ in range(num_sim):
-            self.list.append([self.init_sim.copy() for _ in range(num_per_ctrl)])
+        self.default_sims = [self.init_sim.copy() for _ in range(num_per_ctrl)]
+        self.reset_to_defaults()
 
-    def reset(self):
-        for sims in self.list:
-            for sim in sims:
-                sim.reset()
+    def reset_to_defaults(self):
+        self.replicate_sims(self.default_sims)
 
-    def randomize(self):
-        init_pos_sims = []
-        for _ in range(self.num_per_ctrl):
-            sim = self.init_sim.copy()
+    def shuffle_defaults(self, seed=None):
+        if seed is not None:
+            Simulation.set_seed(seed)
+
+        for sim in self.default_sims:
             sim.move_robot_random()
-            init_pos_sims.append(sim)
 
+    def move_forward_defaults(self, step_size=1, max_noise=0, seed=None):
+        if seed is not None:
+            np.random.seed(seed)
+
+        for sim in self.default_sims:
+            dx, dy = np.random.uniform(-max_noise, max_noise, size=2)
+            sim.set_robot_speed(1 + dx, 1 + dy)
+            sim.simulate(step_size)
+
+    def replicate_sims(self, sims):
         for i in range(len(self.list)):
             for sim in self.list[i]:
-                sim.__exit__(None, None, None)
-            self.list[i] = [sim.copy() for sim in init_pos_sims]
+                sim.close()
+            self.list[i] = [sim.copy() for sim in sims]
+
+    def close(self):
+        self.init_sim.close()
+        for ctrl_sims in self.list:
+            for sim in ctrl_sims:
+                sim.close()
 
     def __getitem__(self, item):
         return self.list[item]
@@ -153,7 +172,5 @@ class SimList:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.init_sim.__exit__(exc_type, exc_val, exc_tb)
-        for sims in self.list:
-            for sim in sims:
-                sim.__exit__(exc_type, exc_val, exc_tb)
+        self.close()
+

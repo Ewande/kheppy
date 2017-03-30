@@ -3,6 +3,7 @@ import numpy as np
 import os
 
 from kheppy.core import SimList
+from kheppy.core import Simulation
 from kheppy.evocom.ga.population import Population
 from kheppy.utils import Reporter
 from kheppy.utils import timestamp
@@ -17,7 +18,7 @@ class GeneticAlgorithm:
         self.eval_params(model=None, fitness_func=None)
         self.sim_params(wd_path=None, robot_id=None)
         self.early_stopping(self.params['epochs'])
-        self.reporter = Reporter(['best', 'avg', 'min', 'test'])
+        self.reporter = Reporter(['max', 'avg', 'min'])
         self.best = None
 
     def evo_params(self, pop_size=100, p_mut=0.03, p_cross=0.75, epochs=100, param_init_limits=(-1, 1)):
@@ -33,14 +34,37 @@ class GeneticAlgorithm:
         return self
 
     def eval_params(self, model, fitness_func, num_cycles=80, steps_per_cycle=7, aggregate_func=np.mean,
-                    num_sim=1, randomize_position=False):
+                    num_positions=1, position='static', move_step=1, move_noise=0):
+        """
+        Set parameters dedicated to evaluation process.
+        
+        :param model: 
+        :param fitness_func: 
+        :param num_cycles: 
+        :param steps_per_cycle: 
+        :param aggregate_func: 
+        :param num_positions: 
+        :param position: starting position policy during evolution
+            static  - select random position before evolution starts, 
+                    use that position in every epoch
+            dynamic - select random position before each epoch,
+            moving  - select random position before evolution starts, 
+                    move position in random direction before each epoch,
+                    see parameters move_step and move_noise.
+        :param move_step: used only when position='moving'
+        :param move_noise: used only when position='moving'
+        
+        :return: None
+        """
         self.params['model'] = model
         self.params['fit_func'] = fitness_func
         self.params['num_cycles'] = num_cycles
         self.params['steps'] = steps_per_cycle
         self.params['agg_func'] = aggregate_func
-        self.params['num_sim'] = num_sim
-        self.params['rand_pos'] = randomize_position
+        self.params['num_sim'] = num_positions
+        self.params['pos'] = position
+        self.params['move_step'] = move_step
+        self.params['move_noise'] = move_noise
         return self
 
     def sim_params(self, wd_path, robot_id, max_robot_speed=5):
@@ -53,6 +77,13 @@ class GeneticAlgorithm:
         self.params['stop'] = epochs
         return self
 
+    def _prepare_positions(self, sim_list):
+        if self.params['pos'] == 'dynamic':
+            sim_list.shuffle_defaults()
+        if self.params['pos'] == 'moving':
+            sim_list.move_forward_defaults(self.params['move_step'], self.params['move_noise'])
+        sim_list.reset_to_defaults()
+
     def run(self, output_dir=None, num_proc=1, seed=42, verbose=False):
         np.random.seed(seed)
         with SimList(self.params['wd_path'], 2 * self.params['pop_size'], self.params['num_sim'],
@@ -64,14 +95,13 @@ class GeneticAlgorithm:
             pop = Population(self.params['model'], self.params['pop_size'], self.params['param_init'])
             best, no_change, i = None, 0, 0
 
+            sim_list.shuffle_defaults(seed=seed)
+            sim_list.reset_to_defaults()
+
             while i < self.params['epochs'] and no_change < self.params['stop']:
-                if self.params['rand_pos']:
-                    sim_list.randomize()
-                else:
-                    sim_list.reset()
 
                 if verbose:
-                    print('Epoch {:>3} '.format(i), end='', flush=True)
+                    print('Epoch {:>3} '.format(i + 1), end='', flush=True)
                 start = timer()
                 pop.cross(self.params['p_cross'])
                 pop.mutate(self.params['p_mut'])
@@ -79,17 +109,13 @@ class GeneticAlgorithm:
                                     self.params['fit_func'], self.params['agg_func'], num_proc)
                 pop = pop.select(self.params['t_size'])
 
-                ep_best = pop.best().copy()
-                ep_best.reset_fitness()
-                ep_best.evaluate(sim_list.init_sim.copy(), pop.network, 800, self.params['max_speed'],
-                                 self.params['steps'], self.params['fit_func'], np.mean)
-
                 if verbose:
-                    print('finished in {:>5.2f}s (simulation: {:>5.2f}s) | best fitness: {:.4f} | '
-                          'average fitness: {:.4f} | test position best fitness: {:.4f}.'
-                          .format(timer() - start, time, pop.best().fitness, pop.average_fitness(), ep_best.fitness))
-                self.reporter.put(['best', 'avg', 'min', 'test'], [pop.best().fitness, pop.average_fitness(),
-                                                                   pop.worst().fitness, ep_best.fitness])
+                    print('finished in {:>5.2f}s (simulation: {:>5.2f}s) | max fitness: {:.4f} | '
+                          'average fitness: {:.4f} | min fitness: {:.4f}.'
+                          .format(timer() - start, time, pop.best().fitness, pop.average_fitness(),
+                                  pop.worst().fitness))
+                self.reporter.put(['max', 'avg', 'min'], [pop.best().fitness, pop.average_fitness(),
+                                                          pop.worst().fitness])
 
                 if best is not None and pop.best().fitness - best.fitness < 0.0001:
                     no_change += 1
@@ -98,9 +124,39 @@ class GeneticAlgorithm:
                     no_change = 0
                 i += 1
 
+                self._prepare_positions(sim_list)
+
             if output_dir is not None:
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
                 self.params['model'].save('{}ga_final_{}.nn'.format(output_dir, timestamp()), best.weights, best.biases)
-            print('Evolution finished after {} iterations.'.format(i))
+            if verbose:
+                print('Evolution finished after {} iterations.'.format(i))
             self.best = best
+
+    def test(self, seed=50, num_points=1000, num_cycles=160, controller=None, verbose=False):
+        if controller is None:
+            controller = self.best.copy()
+        else:
+            controller = controller.copy()
+
+        if verbose:
+            print('Testing using {} starting points. Single evaluation length = {} cycles.'
+                  .format(num_points, num_cycles))
+
+        with Simulation(self.params['wd_path']) as sim:
+            sim.set_controlled_robot(self.params['robot_id'])
+            sim.set_seed(seed)
+            res = []
+            for i in range(num_points):
+                sim.move_robot_random()
+                controller.reset_fitness()
+                controller.evaluate(sim, self.params['model'], num_cycles, self.params['max_speed'],
+                                    self.params['steps'], self.params['fit_func'], np.mean)
+                res.append(controller.fitness)
+                if verbose:
+                    print('\rTesting progress: {:5.2f}%...'.format(100. * (i + 1) / num_points), end='', flush=True)
+            if verbose:
+                print('\nAverage fitness in test: {:.4f}.'.format(np.mean(res)))
+
+            return np.mean(res)

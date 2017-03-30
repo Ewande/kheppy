@@ -1,9 +1,8 @@
 from multiprocessing.pool import Pool
 
 from kheppy.evocom.ga.individual import Controller
-from numpy.random import randint, uniform
+from numpy.random import randint, uniform, shuffle
 import numpy as np
-import random
 
 _PARALLEL_CONTEXT = None
 
@@ -36,7 +35,7 @@ class Population:
         self.pop_size = len(self.pop)
 
     def cross(self, prob):
-        random.shuffle(self.pop)
+        shuffle(self.pop)
         for i in range(0, len(self.pop), 2):
             if uniform() < prob:
                 c1_new, c2_new = Controller.cross(self.pop[i], self.pop[i + 1])

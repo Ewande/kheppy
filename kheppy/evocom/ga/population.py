@@ -67,13 +67,19 @@ class Population:
 
         return total_sim_time / num_proc
 
-    def select(self, tournament_size):
-        new_pop = []
-        for _ in range(self.pop_size):
-            group = randint(0, len(self.pop), tournament_size).tolist()
-            max_ind = np.argmax([self.pop[i].fitness for i in group])
-            best = self.pop[group[max_ind]]
-            new_pop.append(best.copy())
+    def select(self, sel_type):
+        if isinstance(sel_type, int):
+            new_pop = []
+            for _ in range(self.pop_size):
+                group = randint(0, len(self.pop), sel_type).tolist()
+                max_ind = np.argmax([self.pop[i].fitness for i in group])
+                best = self.pop[group[max_ind]]
+                new_pop.append(best.copy())
+        else:
+            cum_fit = np.cumsum([elem.fitness for elem in self.pop])
+            draws = np.random.uniform(0, cum_fit[-1], self.pop_size)
+            indices = np.searchsorted(cum_fit, draws)
+            new_pop = [self.pop[ind].copy() for ind in indices]
 
         return Population(self.network, pop_list=new_pop)
 

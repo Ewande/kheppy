@@ -29,14 +29,22 @@ class GeneticAlgorithm:
         self.params['param_init'] = param_init_limits
         return self
 
-    def sel_params(self, tournament_size=3):
-        self.params['t_size'] = tournament_size
-        return self
+    def sel_params(self, sel_type=3):
+        """Set parameters dedicated to selection process.
+        
+        :param sel_type: 'rw' (roulette wheel) or int (tournament size)
+        
+        :return: this GeneticAlgorithm object
+        """
+        if isinstance(sel_type, int) or sel_type == 'rw':
+            self.params['sel_type'] = sel_type
+            return self
+        else:
+            raise ValueError('Unsupported selection type. See function docstring.')
 
     def eval_params(self, model, fitness_func, num_cycles=80, steps_per_cycle=7, aggregate_func=np.mean,
                     num_positions=1, position='static', move_step=1, move_noise=0):
-        """
-        Set parameters dedicated to evaluation process.
+        """Set parameters dedicated to evaluation process.
         
         :param model: 
         :param fitness_func: 
@@ -54,7 +62,7 @@ class GeneticAlgorithm:
         :param move_step: used only when position='moving'
         :param move_noise: used only when position='moving'
         
-        :return: None
+        :return: this GeneticAlgorithm object
         """
         self.params['model'] = model
         self.params['fit_func'] = fitness_func
@@ -107,7 +115,7 @@ class GeneticAlgorithm:
                 pop.mutate(self.params['p_mut'])
                 time = pop.evaluate(sim_list, self.params['num_cycles'], self.params['steps'], self.params['max_speed'],
                                     self.params['fit_func'], self.params['agg_func'], num_proc)
-                pop = pop.select(self.params['t_size'])
+                pop = pop.select(self.params['sel_type'])
 
                 if verbose:
                     print('finished in {:>5.2f}s (simulation: {:>5.2f}s) | max fitness: {:.4f} | '

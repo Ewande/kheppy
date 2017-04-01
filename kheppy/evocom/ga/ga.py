@@ -18,7 +18,7 @@ class GeneticAlgorithm:
         self.eval_params(model=None, fitness_func=None)
         self.sim_params(wd_path=None, robot_id=None)
         self.early_stopping(self.params['epochs'])
-        self.reporter = Reporter(['max', 'avg', 'min'])
+        self.reporter = Reporter(['max', 'avg', 'min', 'start_pos'])
         self.best = None
 
     def evo_params(self, pop_size=100, p_mut=0.03, p_cross=0.75, epochs=100, param_init_limits=(-1, 1)):
@@ -94,7 +94,7 @@ class GeneticAlgorithm:
 
     def run(self, output_dir=None, num_proc=1, seed=42, verbose=False):
         np.random.seed(seed)
-        with SimList(self.params['wd_path'], 2 * self.params['pop_size'], self.params['num_sim'],
+        with SimList(self.params['wd_path'], 2 * self.params['pop_size'] + 1, self.params['num_sim'],
                      self.params['robot_id']) as sim_list:
 
             if verbose:
@@ -122,8 +122,9 @@ class GeneticAlgorithm:
                           'average fitness: {:.4f} | min fitness: {:.4f}.'
                           .format(timer() - start, time, pop.best().fitness, pop.average_fitness(),
                                   pop.worst().fitness))
-                self.reporter.put(['max', 'avg', 'min'], [pop.best().fitness, pop.average_fitness(),
-                                                          pop.worst().fitness])
+                self.reporter.put(['max', 'avg', 'min', 'start_pos'],
+                                  [pop.best().fitness, pop.average_fitness(), pop.worst().fitness,
+                                  [sim.get_robot_position() for sim in sim_list.default_sims]])
 
                 if best is not None and pop.best().fitness - best.fitness < 0.0001:
                     no_change += 1

@@ -1,6 +1,8 @@
 import numpy as np
 from numpy.random import uniform
 
+from kheppy.utils.misc import to_str
+
 
 class Layer:
     def __init__(self, w_shape, b_shape, activation, activation_name):
@@ -55,8 +57,8 @@ class NeuralNet:
             for layer, w, b in zip(self.layers, weights, biases):
                 b = b[0]
                 f.write(str(layer.activation_name) + '\n')
-                f.write(' '.join([str(dim) for dim in w.shape]) + '\n')
+                f.write(to_str(w.shape) + '\n')
                 for w_row in w:
-                    f.write(' '.join([str(val) for val in w_row]) + '\n')
-                f.write(' '.join([str(dim) for dim in b.shape]) + '\n')
-                f.write(' '.join([str(val) for val in b]) + '\n')
+                    f.write(to_str(w_row) + '\n')
+                f.write(to_str(b.shape) + '\n')
+                f.write(to_str(b) + '\n')

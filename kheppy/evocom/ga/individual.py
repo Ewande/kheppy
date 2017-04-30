@@ -1,47 +1,22 @@
 from numpy.random import uniform, randint
 import numpy as np
-from timeit import default_timer as timer
+
+from kheppy.evocom.commons.individual import Controller
 
 
-class Controller:
-
-    def __init__(self, weights=None, biases=None):
-        self.weights = [np.array(layer_weights) for layer_weights in weights] if weights is not None else []
-        self.biases = [np.array(layer_biases) for layer_biases in biases] if biases is not None else []
-
-        self.fitness = 0
+class ControllerGA(Controller):
 
     def copy(self):
-        controller = Controller(self.weights, self.biases)
-        controller.fitness = self.fitness
-        return controller
-
-    def reset_fitness(self):
-        self.fitness = 0
-
-    def evaluate(self, simulation, model, num_cycles, steps_per_cycle, max_speed, eval_func, aggregate_func):
-        fitness = []
-        time = 0
-        for i in range(num_cycles):
-            left, right = model.predict(simulation.get_sensor_states(), self.weights, self.biases)
-            simulation.set_robot_speed(left * max_speed, right * max_speed)
-            start = timer()
-            simulation.simulate(steps_per_cycle)
-            time += timer() - start
-            fitness.append(eval_func(simulation.get_sensor_states(), left, right))
-
-        fitness = aggregate_func(fitness)
-        self.fitness += fitness
-        return time
+        return self._copy(ControllerGA)
 
     def mutate(self, prob):
         self.weights = [(w + uniform(-0.05, 0.05, w.shape) * (uniform(0, 1, w.shape) > prob)) for w in self.weights]
         self.biases = [(b + uniform(-0.05, 0.05, b.shape) * (uniform(0, 1, b.shape) < prob)) for b in self.biases]
 
-    @staticmethod
-    def cross(c1, c2):
-        c1_new = Controller()
-        c2_new = Controller()
+    def cross(self, c2):
+        c1 = self
+        c1_new = ControllerGA()
+        c2_new = ControllerGA()
         for w1, w2, b1, b2 in zip(c1.weights, c2.weights, c1.biases, c2.biases):
             w1f, w2f, b1f, b2f = w1.flatten(), w2.flatten(), b1.flatten(), b2.flatten()
 
@@ -56,4 +31,4 @@ class Controller:
             c1_new.biases.append(b1_new)
             c2_new.biases.append(b2_new)
 
-        return c1, c2
+        return c1_new, c2_new

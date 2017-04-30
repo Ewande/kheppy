@@ -1,6 +1,6 @@
 from multiprocessing.pool import Pool
 
-from kheppy.evocom.ga.individual import Controller
+from kheppy.evocom.ga.individual import ControllerGA
 from numpy.random import randint, uniform, shuffle
 import numpy as np
 
@@ -28,7 +28,7 @@ class Population:
             for _ in range(pop_size):
                 weights = self.network.random_weights_list(init_limits)
                 biases = self.network.random_biases_list(init_limits)
-                self.pop.append(Controller(weights, biases))
+                self.pop.append(ControllerGA(weights, biases))
         else:
             self.pop = pop_list
 
@@ -38,7 +38,7 @@ class Population:
         shuffle(self.pop)
         for i in range(0, len(self.pop), 2):
             if uniform() < prob:
-                c1_new, c2_new = Controller.cross(self.pop[i], self.pop[i + 1])
+                c1_new, c2_new = self.pop[i].cross(self.pop[i + 1])
                 self.pop.append(c1_new)
                 self.pop.append(c2_new)
 

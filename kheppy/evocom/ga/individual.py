@@ -1,7 +1,7 @@
 from numpy.random import uniform, randint
 import numpy as np
 
-from kheppy.evocom.commons.individual import Controller
+from kheppy.evocom.commons import Controller
 
 
 class ControllerGA(Controller):

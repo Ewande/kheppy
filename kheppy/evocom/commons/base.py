@@ -9,14 +9,14 @@ class BaseAlgorithm(ABC):
 
     def __init__(self):
         self.params = {}
-        self.evo_params()
+        self.main_params()
         self.eval_params(model=None, fitness_func=None)
         self.sim_params(wd_path=None, robot_id=None)
         self.early_stopping(np.inf)
         self.reporter = Reporter(['max', 'avg', 'min', 'start_pos'])
         self.best = None
 
-    def evo_params(self, pop_size=100, epochs=100, param_init_limits=(-1, 1)):
+    def main_params(self, pop_size=100, epochs=100, param_init_limits=(-1, 1)):
         self.params['pop_size'] = pop_size
         self.params['epochs'] = epochs
         self.params['param_init'] = param_init_limits

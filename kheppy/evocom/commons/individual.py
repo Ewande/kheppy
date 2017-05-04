@@ -1,22 +1,19 @@
+from abc import ABC, abstractmethod
 import numpy as np
 from timeit import default_timer as timer
 
 
-class Controller:
+class Controller(ABC):
 
-    def __init__(self, weights=None, biases=None):
+    def __init__(self, weights=None, biases=None, fitness=0):
         self.weights = [np.array(layer_weights) for layer_weights in weights] if weights is not None else []
         self.biases = [np.array(layer_biases) for layer_biases in biases] if biases is not None else []
 
-        self.fitness = 0
+        self.fitness = fitness
 
-    def _copy(self, class_type):
-        controller = class_type(self.weights, self.biases)
-        controller.fitness = self.fitness
-        return controller
-
+    @abstractmethod
     def copy(self):
-        return self._copy(Controller)
+        pass
 
     def reset_fitness(self):
         self.fitness = 0

@@ -13,26 +13,27 @@ class GeneticAlgorithm(BaseAlgorithm):
     def __init__(self):
         super().__init__()
 
-        self.sel_params()
+        self.ga_params()
 
-    def evo_params(self, pop_size=100, p_mut=0.03, p_cross=0.75, epochs=100, param_init_limits=(-1, 1)):
-        super().evo_params(pop_size, epochs, param_init_limits)
-        self.params['p_mut'] = p_mut
-        self.params['p_cross'] = p_cross
-        return self
-
-    def sel_params(self, sel_type=3):
-        """Set parameters dedicated to selection process.
+    def ga_params(self, p_mut=0.03, p_cross=0.75, sel_type=3):
+        """
+        Set parameters specific to genetic algorithm.
         
-        :param sel_type: 'rw' (roulette wheel) or int (tournament size)
+        :param p_mut: mutation probability
+        :param p_cross: crossover probability
+        :param sel_type: selection type, 'rw' (roulette wheel) or int (tournament size)
         
         :return: this GeneticAlgorithm object
         """
+        self.params['p_mut'] = p_mut
+        self.params['p_cross'] = p_cross
+
         if isinstance(sel_type, int) or sel_type == 'rw':
             self.params['sel_type'] = sel_type
-            return self
         else:
             raise ValueError('Unsupported selection type. See function docstring.')
+
+        return self
 
     def run(self, output_dir=None, num_proc=1, seed=42, verbose=False):
         np.random.seed(seed)

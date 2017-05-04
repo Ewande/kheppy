@@ -7,7 +7,7 @@ from kheppy.evocom.commons import Controller
 class ControllerGA(Controller):
 
     def copy(self):
-        return self._copy(ControllerGA)
+        return ControllerGA(self.weights, self.biases, self.fitness)
 
     def mutate(self, prob):
         self.weights = [(w + uniform(-0.05, 0.05, w.shape) * (uniform(0, 1, w.shape) > prob)) for w in self.weights]

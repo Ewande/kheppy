@@ -10,8 +10,10 @@ class PopulationPSO(Population):
     def __init__(self, network, pop_list):
         super().__init__(network, pop_list)
         self.global_best = None
+        self.limits = (0, 0)
 
     def initialize(self, init_limits):
+        self.limits = init_limits
         self.pop = []
         for _ in range(self.pop_size):
             weights = self.network.random_weights_list(init_limits)
@@ -39,19 +41,23 @@ class PopulationPSO(Population):
             rnd_gws = self.network.random_weights_list((0, 1))
             for i in range(len(controller.weights)):
                 cwv = controller.velocities[0][i]
+                cw = controller.weights[i]
                 lw = controller.local_best.weights[i]
                 gw = self.global_best.weights[i]
-                nwv = inertia * cwv + rnd_lws[i] * cognitive_param * lw + rnd_gws[i] * social_param * gw
+                nwv = inertia * cwv + rnd_lws[i] * cognitive_param * (lw - cw) + rnd_gws[i] * social_param * (gw - cw)
                 controller.velocities[0][i] = nwv * constr_factor
+                controller.velocities[0][i] = np.clip(controller.velocities[0][i], self.limits[0], self.limits[1])
                 controller.weights[i] += controller.velocities[0][i]
+                controller.weights[i] = np.clip(controller.weights[i], self.limits[0], self.limits[1])
 
             rnd_lbs = self.network.random_biases_list((0, 1))
             rnd_gbs = self.network.random_biases_list((0, 1))
             for i in range(len(controller.biases)):
                 cbv = controller.velocities[1][i]
+                cb = controller.biases[i]
                 lb = controller.local_best.biases[i]
                 gb = self.global_best.biases[i]
-                nbv = inertia * cbv + rnd_lbs[i] * cognitive_param * lb + rnd_gbs[i] * social_param * gb
+                nbv = inertia * cbv + rnd_lbs[i] * cognitive_param * (lb - cb) + rnd_gbs[i] * social_param * (gb - cb)
                 controller.velocities[1][i] = nbv * constr_factor
                 controller.biases[i] += controller.velocities[1][i]
 

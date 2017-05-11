@@ -1,11 +1,5 @@
-from timeit import default_timer as timer
-import numpy as np
-import os
-
-from kheppy.core import SimList
 from kheppy.evocom.commons import BaseAlgorithm
 from kheppy.evocom.ga.population import PopulationGA
-from kheppy.utils import timestamp
 
 
 class GeneticAlgorithm(BaseAlgorithm):
@@ -16,8 +10,7 @@ class GeneticAlgorithm(BaseAlgorithm):
         self.ga_params()
 
     def ga_params(self, p_mut=0.03, p_cross=0.75, sel_type=3):
-        """
-        Set parameters specific to genetic algorithm.
+        """Set parameters specific to genetic algorithm.
         
         :param p_mut: mutation probability
         :param p_cross: crossover probability
@@ -35,53 +28,15 @@ class GeneticAlgorithm(BaseAlgorithm):
 
         return self
 
-    def run(self, output_dir=None, num_proc=1, seed=42, verbose=False):
-        np.random.seed(seed)
-        with SimList(self.params['wd_path'], 2 * self.params['pop_size'] + 1, self.params['num_sim'],
-                     self.params['robot_id']) as sim_list:
+    def _get_init_pop(self):
+        return PopulationGA(self.params['model'], self.params['pop_size']).initialize(self.params['param_init'])
 
-            if verbose:
-                print('Using {} simulation(s) per controller.'.format(self.params['num_sim']))
-                print('Preparing population...')
-            pop = PopulationGA(self.params['model'], self.params['pop_size']).initialize(self.params['param_init'])
-            best, no_change, i = None, 0, 0
+    def _get_next_pop(self, pop):
+        pop.cross(self.params['p_cross'])
+        pop.mutate(self.params['p_mut'])
 
-            sim_list.shuffle_defaults(seed=seed)
-            sim_list.reset_to_defaults()
+        time = self._evaluate_pop(pop)
+        ffe = len(pop.pop) * self.params['num_sim']
 
-            while i < self.params['epochs'] and no_change < self.params['stop']:
-
-                if verbose:
-                    print('Epoch {:>3} '.format(i + 1), end='', flush=True)
-                start = timer()
-                pop.cross(self.params['p_cross'])
-                pop.mutate(self.params['p_mut'])
-                time = pop.evaluate(sim_list, self.params['num_cycles'], self.params['steps'], self.params['max_speed'],
-                                    self.params['fit_func'], self.params['agg_func'], num_proc)
-                pop = pop.select(self.params['sel_type'])
-
-                if verbose:
-                    print('finished in {:>5.2f}s (simulation: {:>5.2f}s) | max fitness: {:.4f} | '
-                          'average fitness: {:.4f} | min fitness: {:.4f}.'
-                          .format(timer() - start, time, pop.best().fitness, pop.average_fitness(),
-                                  pop.worst().fitness))
-                self.reporter.put(['max', 'avg', 'min', 'start_pos'],
-                                  [pop.best().fitness, pop.average_fitness(), pop.worst().fitness,
-                                  [sim.get_robot_position() for sim in sim_list.default_sims]])
-
-                if best is not None and pop.best().fitness - best.fitness < 0.0001:
-                    no_change += 1
-                else:
-                    best = pop.best().copy()
-                    no_change = 0
-                i += 1
-
-                self._prepare_positions(sim_list)
-
-            if output_dir is not None:
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir)
-                self.params['model'].save('{}ga_final_{}.nn'.format(output_dir, timestamp()), best.weights, best.biases)
-            if verbose:
-                print('Evolution finished after {} iterations.'.format(i))
-            self.best = best
+        next_pop = pop.select(self.params['sel_type'])
+        return next_pop, ffe, time

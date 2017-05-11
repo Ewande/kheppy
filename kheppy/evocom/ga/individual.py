@@ -10,7 +10,7 @@ class ControllerGA(Controller):
         return ControllerGA(self.weights, self.biases, self.fitness)
 
     def mutate(self, prob):
-        self.weights = [(w + uniform(-0.05, 0.05, w.shape) * (uniform(0, 1, w.shape) > prob)) for w in self.weights]
+        self.weights = [(w + uniform(-0.05, 0.05, w.shape) * (uniform(0, 1, w.shape) < prob)) for w in self.weights]
         self.biases = [(b + uniform(-0.05, 0.05, b.shape) * (uniform(0, 1, b.shape) < prob)) for b in self.biases]
 
     def cross(self, c2):

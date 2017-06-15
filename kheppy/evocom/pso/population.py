@@ -33,9 +33,6 @@ class PopulationPSO(Population):
             controller.update_local_best()
 
     def move_particles(self, inertia, cognitive_param, social_param):
-        fi = cognitive_param + social_param
-        constr_factor = 2 / abs(2 - fi - math.sqrt(fi * fi - 4 * fi))
-
         for controller in self.pop:
             rnd_lws = self.network.random_weights_list((0, 1))
             rnd_gws = self.network.random_weights_list((0, 1))
@@ -45,8 +42,8 @@ class PopulationPSO(Population):
                 lw = controller.local_best.weights[i]
                 gw = self.global_best.weights[i]
                 nwv = inertia * cwv + rnd_lws[i] * cognitive_param * (lw - cw) + rnd_gws[i] * social_param * (gw - cw)
-                controller.velocities[0][i] = nwv * constr_factor
-                controller.velocities[0][i] = np.clip(controller.velocities[0][i], self.limits[0], self.limits[1])
+                controller.velocities[0][i] = nwv
+                controller.velocities[0][i] = np.clip(controller.velocities[0][i], 2 * self.limits[0], 2 * self.limits[1])
                 controller.weights[i] += controller.velocities[0][i]
                 controller.weights[i] = np.clip(controller.weights[i], self.limits[0], self.limits[1])
 
@@ -58,8 +55,13 @@ class PopulationPSO(Population):
                 lb = controller.local_best.biases[i]
                 gb = self.global_best.biases[i]
                 nbv = inertia * cbv + rnd_lbs[i] * cognitive_param * (lb - cb) + rnd_gbs[i] * social_param * (gb - cb)
-                controller.velocities[1][i] = nbv * constr_factor
+                controller.velocities[1][i] = nbv
+                controller.velocities[1][i] = np.clip(controller.velocities[1][i], 2 * self.limits[0], 2 * self.limits[1])
                 controller.biases[i] += controller.velocities[1][i]
+                controller.biases[i] = np.clip(controller.biases[i], self.limits[0], self.limits[1])
+
+    def local_bests(self):
+        return [controller.local_best for controller in self.pop]
 
     def best(self):
         return self.global_best

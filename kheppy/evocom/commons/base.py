@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from multiprocessing.pool import Pool
 import numpy as np
 import os
 from timeit import default_timer as timer
+from itertools import repeat
 
 from kheppy.core import Simulation, SimList
 from kheppy.utils import Reporter, timestamp
@@ -152,6 +154,22 @@ class BaseAlgorithm(ABC):
                 print('Evolution finished after {} iterations with total of {} FFE.'.format(i, ffe))
             self.best = best
 
+    def _test(self, seed_offset, seed, num_points, num_cycles, controller):
+        with Simulation(self.params['wd_path']) as sim:
+            sim.set_controlled_robot(self.params['robot_id'])
+            sim.set_seed(seed)
+            for i in range(seed_offset):
+                sim.move_robot_random()
+
+            res = []
+            for i in range(num_points):
+                sim.move_robot_random()
+                controller.reset_fitness()
+                controller.evaluate(sim, self.params['model'], num_cycles, self.params['max_speed'],
+                                    self.params['steps'], self.params['fit_func'], np.mean)
+                res.append(controller.fitness)
+            return res
+
     def test(self, seed=50, num_points=1000, num_cycles=160, controller=None, verbose=False):
         if controller is None:
             controller = self.best.copy()
@@ -162,10 +180,10 @@ class BaseAlgorithm(ABC):
             print('Testing using {} starting points. Single evaluation length = {} cycles.'
                   .format(num_points, num_cycles))
 
+        res = []
         with Simulation(self.params['wd_path']) as sim:
             sim.set_controlled_robot(self.params['robot_id'])
             sim.set_seed(seed)
-            res = []
             for i in range(num_points):
                 sim.move_robot_random()
                 controller.reset_fitness()
@@ -174,7 +192,7 @@ class BaseAlgorithm(ABC):
                 res.append(controller.fitness)
                 if verbose:
                     print('\rTesting progress: {:5.2f}%...'.format(100. * (i + 1) / num_points), end='', flush=True)
-            if verbose:
-                print('\nAverage fitness in test: {:.4f}.'.format(np.mean(res)))
+        if verbose:
+            print('\nAverage fitness in test: {:.4f}.'.format(np.mean(res)))
 
-            return np.mean(res)
+        return res

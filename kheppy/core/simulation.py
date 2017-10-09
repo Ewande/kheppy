@@ -95,6 +95,7 @@ class Simulation:
         if self.robot is None:
             Simulation._print_warning()
         Simulation._dll.teleportRobotRandom(self.sim, self.robot)
+        self.sensor_states = None
 
     def close(self):
         if self.sim is not None:

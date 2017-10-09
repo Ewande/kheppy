@@ -16,7 +16,9 @@ class PartSwarmOpt(BaseAlgorithm):
         return self
 
     def _get_init_pop(self):
-        return PopulationPSO(self.params['model'], self.params['pop_size']).initialize(self.params['param_init'])
+        pop = PopulationPSO(self.params['model'], self.params['pop_size']).initialize(self.params['param_init'])
+        pop.update_local_best()
+        return pop
 
     def _get_next_pop(self, pop):
         if self.params['pos'] != 'static':

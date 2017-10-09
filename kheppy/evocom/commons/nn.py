@@ -4,6 +4,18 @@ from numpy.random import uniform
 from kheppy.utils.misc import to_str
 
 
+def _relu(x):
+    return np.maximum(x, 0)
+
+
+def _sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+
+def _linear(x):
+    return x
+
+
 class Layer:
     def __init__(self, w_shape, b_shape, activation, activation_name):
         self.W = w_shape
@@ -14,10 +26,10 @@ class Layer:
 
 class NeuralNet:
     ACTIVATIONS = {
-        'relu': lambda x: np.maximum(x, 0),
+        'relu': _relu,
         'tanh': np.tanh,
-        'sigmoid': lambda x: 1 / (1 + np.exp(-x)),
-        'linear': lambda x: x,
+        'sigmoid': _sigmoid,
+        'linear': _linear,
     }
 
     def __init__(self, input_len):

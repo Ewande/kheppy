@@ -15,19 +15,23 @@ class PopulationDE(Population):
 
     def get_candidate_pop(self, p_cross, diff_weight, mut_strat):
         candidates = []
-        best = self.best() if mut_strat == 'best' else None
-        for i, elem in enumerate(self.pop):
+        best = self.best() if mut_strat != 'rand' else None
+        for i, ind in enumerate(self.pop):
             ind_list = [x for x in range(len(self.pop)) if x != i and self.pop[x] != best]
+            a, b, c = choice(ind_list, 3, replace=False)
+
             if mut_strat == 'rand':
-                a, b, c = choice(ind_list, 3, replace=False)
-                fst, snd, thrd = self.pop[a], self.pop[b], self.pop[c]
+                cand = self.pop[a].add_diff_vector(self.pop[b], self.pop[c], diff_weight[0])
             elif mut_strat == 'best':
-                b, c = choice(ind_list, 2, replace=False)
-                fst, snd, thrd = best, self.pop[b], self.pop[c]
-            else:
-                return None
-            cand = fst.prepare_candidate([snd, thrd], [diff_weight])
-            final_cand = fst.binary_cross(cand, p_cross)
+                cand = best.add_diff_vector(self.pop[b], self.pop[c], diff_weight[0])
+            elif mut_strat == 'rand-to-best':
+                cand = self.pop[a].add_diff_vector(self.pop[b], self.pop[c], diff_weight[0])
+                cand = cand.add_diff_vector(best, self.pop[a], diff_weight[1])
+            else:  # mut_strat == 'curr-to-best'
+                cand = ind.add_diff_vector(self.pop[b], self.pop[c], diff_weight[0])
+                cand = cand.add_diff_vector(best, ind, diff_weight[1])
+
+            final_cand = ind.binary_cross(cand, p_cross)
             candidates.append(final_cand)
 
         return PopulationDE(self.network, candidates)

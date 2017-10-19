@@ -9,16 +9,21 @@ class ControllerDE(Controller):
     def copy(self):
         return ControllerDE(self.weights, self.biases, self.fitness)
 
-    def prepare_candidate(self, source_candidates, diff_weights):
-        if len(source_candidates) == 2:
-            snd, thrd = source_candidates
-            diff_weight = diff_weights[0]
-        else:
-            snd, thrd = None, None
-            diff_weight = None
+    def add_diff_vector(self, fst_ind, snd_ind, diff_weight):
+        """Create a new individual by adding weighted difference vector of fst_ind and snd_ind to this individual.
 
-        weights = [w_a + diff_weight * (w_b - w_c) for w_a, w_b, w_c in zip(self.weights, snd.weights, thrd.weights)]
-        biases = [b_a + diff_weight * (b_b - b_c) for b_a, b_b, b_c in zip(self.biases, snd.biases, thrd.biases)]
+        Performed elementwise:
+            new_ind = self + diff_weight * (fst_ind - snd_ind)
+
+        :param fst_ind: first individual
+        :param snd_ind: second individual
+        :param diff_weight: differential weight
+
+        :return: new ControllerDE object
+        """
+
+        weights = [wa + diff_weight * (wb - wc) for wa, wb, wc in zip(self.weights, fst_ind.weights, snd_ind.weights)]
+        biases = [ba + diff_weight * (bb - bc) for ba, bb, bc in zip(self.biases, fst_ind.biases, snd_ind.biases)]
         return ControllerDE(weights, biases)
 
     def binary_cross(self, c2, p_cross):

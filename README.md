@@ -19,8 +19,8 @@ The procedure to run KhepPy is fast and very easy.
 Build from source: [project page](https://github.com/Ewande/khepera).  
 Or use precompiled binaries:
 * [Linux](https://www.dropbox.com/s/dpcs0qsete8do2o/khepera_linux.so?dl=1) (tested on Ubuntu 14.04)
-* [OS X/macOS](https://www.dropbox.com/s/1segnc3t6usninh/khepera_osx.so?dl=1) (tested on macOS Sierra)
-* [Windows](https://www.dropbox.com/s/i4vvpkq4p5uu4c9/khepera_windows.dll?dl=1) (tested on Windows 7 and 8)
+* [OS X/macOS](https://www.dropbox.com/s/1segnc3t6usninh/khepera_osx.so?dl=1) (tested on macOS Sierra/High Sierra)
+* [Windows](https://www.dropbox.com/s/i4vvpkq4p5uu4c9/khepera_windows.dll?dl=1) (tested on Windows 7/8)
 
 ### Installing
 
@@ -45,10 +45,8 @@ python -c 'from kheppy.core import Simulation'
 No output means kheppy.core should be ready to use.
 
 ## Examples
-Now you can run some examples to familiarize yourself with KhepPy:
-* [genetic algorithm](https://github.com/Ewande/kheppy/blob/master/examples/gen_alg.py)
-* WORK IN PROGRESS...
+Now you can run some [examples](https://github.com/Ewande/kheppy/tree/master/examples) to familiarize yourself with KhepPy.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details

@@ -10,10 +10,10 @@ class GeneticAlgorithm(BaseAlgorithm):
         self.ga_params()
 
     def ga_params(self, p_mut=0.03, p_cross=0.75, sel_type=3):
-        """Set parameters specific to genetic algorithm.
+        """Set parameters specific to the genetic algorithm.
         
-        :param p_mut: mutation probability
-        :param p_cross: crossover probability
+        :param p_mut: mutation probability, float
+        :param p_cross: crossover probability, float
         :param sel_type: selection type, 'rw' (roulette wheel) or int (tournament size)
         
         :return: this GeneticAlgorithm object

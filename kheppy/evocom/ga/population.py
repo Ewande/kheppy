@@ -1,6 +1,6 @@
 from kheppy.evocom.commons.population import Population
 from kheppy.evocom.ga.individual import ControllerGA
-from numpy.random import randint, uniform, shuffle
+from numpy.random import choice, uniform, shuffle
 import numpy as np
 
 
@@ -30,7 +30,7 @@ class PopulationGA(Population):
         if isinstance(sel_type, int):
             new_pop = []
             for _ in range(self.pop_size):
-                group = randint(0, len(self.pop), sel_type).tolist()
+                group = choice(len(self.pop), sel_type, replace=False).tolist()
                 max_ind = np.argmax([self.pop[i].fitness for i in group])
                 best = self.pop[group[max_ind]]
                 new_pop.append(best.copy())

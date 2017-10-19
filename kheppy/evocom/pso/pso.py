@@ -10,6 +10,16 @@ class PartSwarmOpt(BaseAlgorithm):
         self.pso_params()
 
     def pso_params(self, inertia_weight=1, cognitive_param=2, social_param=2):
+        """Set parameters specific to the particle swarm optimization.
+
+        See http://tracer.uc3m.es/tws/pso/parameters.html for detailed parameter interpretation.
+
+        :param inertia_weight: inertia weight in velocity update rule, float
+        :param cognitive_param: cognitive parameter in velocity update rule, float
+        :param social_param: social parameter in velocity update rule, float
+
+        :return: this PartSwarmOpt object
+        """
         self.params['inertia'] = inertia_weight
         self.params['cognitive'] = cognitive_param
         self.params['social'] = social_param

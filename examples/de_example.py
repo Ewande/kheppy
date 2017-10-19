@@ -1,4 +1,4 @@
-from kheppy.evocom.commons.nn import NeuralNet
+from kheppy.evocom.commons import NeuralNet
 from kheppy.evocom.de import DiffEvolution
 from kheppy.utils.fitfunc import avoid_collision
 

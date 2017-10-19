@@ -44,4 +44,3 @@ class DiffEvolution(BaseAlgorithm):
 
         final_list = [org if org.fitness >= cand.fitness else cand for org, cand in zip(pop.pop, candidates.pop)]
         return PopulationDE(pop.network, final_list), ffe, time
-

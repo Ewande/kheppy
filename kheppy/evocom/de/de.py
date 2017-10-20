@@ -39,8 +39,11 @@ class DiffEvolution(BaseAlgorithm):
 
     def _get_next_pop(self, pop):
         candidates = pop.get_candidate_pop(self.params['p_cross'], self.params['diff_weight'], self.params['mut_strat'])
-        time = self._evaluate_pop(candidates)
-        ffe = len(candidates.pop) * self.params['num_sim']
+        to_evaluate = PopulationDE(candidates.network, candidates.pop)
+        if self.params['pos'] != 'static' or pop.average_fitness() == 0:
+            to_evaluate.pop += pop.pop
+        time = self._evaluate_pop(to_evaluate)
+        ffe = len(to_evaluate.pop) * self.params['num_sim']
 
         final_list = [org if org.fitness >= cand.fitness else cand for org, cand in zip(pop.pop, candidates.pop)]
         return PopulationDE(pop.network, final_list), ffe, time

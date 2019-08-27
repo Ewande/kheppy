@@ -19,14 +19,18 @@ RUN python setup.py sdist
 
 FROM python:3.6-slim-jessie
 
+RUN pip install -U pip
+
+WORKDIR /tmp/kheppy
+
+COPY --from=khepera-engine /tmp/kheppy.egg-info/PKG-INFO .
+COPY . .
+
+RUN pip install .
+
 WORKDIR /opt/
 
 COPY --from=khepera-engine /tmp/khepera/SimulationServer.so .
-
-COPY . .
-
-COPY --from=khepera-engine /tmp/kheppy.egg-info/PKG-INFO .
-
-RUN pip install .
+COPY examples examples/
 
 ENV KHEPERA_LIB /opt/SimulationServer.so
